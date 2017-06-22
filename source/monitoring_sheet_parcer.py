@@ -15,6 +15,7 @@ from calendar_parcer import get_credentials
 
 SCOPES = source.SECURE['scopes'].get('sheet')
 CLIENT_SECRET_FILE = source.CLIENT_SECRET_FILE
+SHEET_ID = '1TtPEa9F4Hlw1gb6LHIaKkILOCFdFtAZj5C7YBdyWS4M'
 
 
 def parse_from_google():
@@ -26,7 +27,7 @@ def parse_from_google():
     service = discovery.build('sheets', 'v4', http=http,
                               discoveryServiceUrl=discoveryUrl)
 
-    spreadsheetId = source.SHEET_ID
+    spreadsheetId = SHEET_ID
     rangeHeadTable = 'A3:S35'
     result = service.spreadsheets().values().get(
         spreadsheetId=spreadsheetId, range=rangeHeadTable).execute()

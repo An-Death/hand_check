@@ -11,7 +11,7 @@ from googleapiclient import errors
 from apiclient import discovery
 from operator import itemgetter
 import calendar_parcer
-from source import TODAY, add_log, LOG_FILE, SCOPES, EQW_LIST
+from source import TODAY, add_log, LOG_FILE, SCOPES, EQW_LIST, MON_REF, PC_REF
 from monitoring_sheet_parcer import parse_sheet
 
 SCOPES = SCOPES.get('email')
@@ -92,7 +92,7 @@ def get_ref(project_name):
     except KeyError:
         log = ' [ERROR] Cannon get url for this Project: {} Return MONITORING_SHEET'.format(project_name)
         add_log(log, file=LOG_FILE)
-        return 'https://docs.google.com/a/tetra-soft.ru/spreadsheets/d/1TtPEa9F4Hlw1gb6LHIaKkILOCFdFtAZj5C7YBdyWS4M/edit?usp=sharing'
+        return MON_REF
 
 
 def get_metadata(supporters, projects, update_list):
@@ -137,6 +137,8 @@ def send_email(supporters, projects, list_for_update):
     :param list_for_update:
     :return:
     """
+
+
     from hand_check import TEST
     meta = get_metadata(supporters, projects, list_for_update)
     sender = 'me'
@@ -167,17 +169,17 @@ def send_email(supporters, projects, list_for_update):
                     Не забывайте отмечать выполенные проверки!
                     <br>
                     Доступ можно получить по ссылке - 
-                    <a href='http://192.168.0.4/mantis/plugin.php?page=Adamant/util&id=projects_check'>Ручные проверки</a>.
+                    <a href={pc}>Ручные проверки</a>.
                     <br>
                 </p>
                 <p>
                 Параметры доступа к мониторингу можно получить в таблице
-                 <a href='https://docs.google.com/a/tetra-soft.ru/spreadsheets/d/1TtPEa9F4Hlw1gb6LHIaKkILOCFdFtAZj5C7YBdyWS4M/edit?usp=sharing'>
+                 <a href={monitoring}>
                  Мониторинг</a>.
                 </p>
             </body>
         </html>    
-        """.format(name=name, list=main_text)
+        """.format(name=name, list=main_text, monitoring=MON_REF, pc=PC_REF)
 
         message = create_message(sender, to, subject, message.encode('utf-8'))
         send_message(service, to, message)

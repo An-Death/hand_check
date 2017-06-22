@@ -13,12 +13,13 @@ APPLICATION_NAME = SECURE.get('application_name')
 
 # todo Создать возможность добавлять, удалять календари из переменной
 CALENDARS = SECURE.get('calendars')
-SHEET_ID = '1TtPEa9F4Hlw1gb6LHIaKkILOCFdFtAZj5C7YBdyWS4M'
 
 CLIENT_SECRET_FILE = 'secure/client_secret.json'
 
 LG_LIST = SECURE.get('lg_list')
 EQW_LIST = SECURE.get('eqw_list')
+MON_REF = SECURE.get('mon_ref')
+PC_REF = SECURE.get('pc_ref')
 
 JSLIST = "log/calendars.json"
 LOG_FILE = "log/hand_check.log"
