@@ -42,7 +42,7 @@ def create_message(sender, to, subject, message_text):
     return {'raw': base64.urlsafe_b64encode(message.as_string())}
 
 
-def send_message(service, user_id, message):
+def send_message(service, message):
     """Send an email message.
 
     Args:
@@ -54,6 +54,7 @@ def send_message(service, user_id, message):
     Returns:
       Sent Message.
     """
+    user_id = 'me'
     try:
         message = (service.users().messages().send(userId=user_id, body=message)
                    .execute())
@@ -181,7 +182,7 @@ def send_email(supporters, projects, list_for_update):
         """.format(name=name, list=main_text, monitoring=MON_REF, pc=PC_REF)
 
         message = create_message(sender, to, subject, message.encode('utf-8'))
-        send_message(service, to, message)
+        send_message(service, message)
 
 
 def main():

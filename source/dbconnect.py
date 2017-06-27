@@ -27,7 +27,7 @@ def get_shift_by_time(project_time):
     :param project_time: int
     :return: str(day/night)
     """
-    
+
     pt = datetime.fromtimestamp(project_time).time()
     start_day = time(8, 0, 0)
     end_day = time(20, 0, 0)
