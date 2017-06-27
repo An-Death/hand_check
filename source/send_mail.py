@@ -137,9 +137,8 @@ def send_email(supporters, projects, list_for_update):
     :param list_for_update:
     :return:
     """
-
-
     from hand_check import TEST
+
     meta = get_metadata(supporters, projects, list_for_update)
     sender = 'me'
     subject = 'Назначены ручные проверки на ' + str(TODAY)

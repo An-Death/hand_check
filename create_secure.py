@@ -54,7 +54,9 @@ secure = {
     'project_with_tasks':(
     ),
     'eqw_list': [
-    ]
+    ],
+    "mon_ref": "https://docs.google.com/a/tetra-soft.ru/spreadsheets/d/1TtPEa9F4Hlw1gb6LHIaKkILOCFdFtAZj5C7YBdyWS4M/edit?usp=sharing",
+    "pc_ref": "http://192.168.0.4/mantis/plugin.php?page=Adamant/util&id=projects_check"
 }
 with codecs.open('secure/secure.json', 'w', encoding='utf-8') as wf:
     wf.write(json.dumps(secure, ensure_ascii=False, sort_keys=True, indent=3))

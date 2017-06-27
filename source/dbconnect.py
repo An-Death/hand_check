@@ -27,9 +27,11 @@ def get_shift_by_time(project_time):
     :param project_time: int
     :return: str(day/night)
     """
+    
     pt = datetime.fromtimestamp(project_time).time()
     start_day = time(8, 0, 0)
-    return 'day' if pt > start_day else 'night'
+    end_day = time(20, 0, 0)
+    return 'day' if end_day > pt > start_day else 'night'
 
 def get_projects2():
     """Возвращаем лист с диктами projects
@@ -55,7 +57,7 @@ def get_projects2():
         with CLIENT_BASE.begin() as cb:
             select_last_date = "select UNIX_TIMESTAMP(f8360) from cb_data42 where f435='{}';".format(name)
             last_check = cb.execute(select_last_date)
-        last_check = last_check.fetchone()[0]
+            last_check = last_check.fetchone()[0]
         project = {
             'id': project['id'],
             'name': name,

@@ -201,7 +201,7 @@ def update_table_quere(problems):
             support_name
         """
 
-        def set_all(n, Trigger=False):
+        def set_all(n, trigger=False):
             def re_user(sp):
                 if sp.get('end') > p_time > sp.get('start'):
                     user_name = sp.get('login')
@@ -212,7 +212,7 @@ def update_table_quere(problems):
                 supporter = supporters[shift].get(supporter_name)
                 if supporter.get('grade') != n:
                     continue
-                if Trigger is True:
+                if trigger is True:
                     name = supporter.get('login')
                     if project.get('con'):
                         cached_con = cache_con.keys()
@@ -248,7 +248,7 @@ def update_table_quere(problems):
         if gl.get(grade) == 1:
             user_data = set_all(grade)
         elif gl.get(grade) > 1:
-            user_data = set_all(grade, Trigger=True)
+            user_data = set_all(grade, trigger=True)
         return user_data
 
     # 1. Если проект уже назначен, пропускаем его
@@ -287,7 +287,7 @@ def update_table_quere(problems):
             }
             update_list.append(update)
         else:
-            raise TypeError('[ERROR] : ')
+            raise TypeError('[ERROR] Cannot get sup data for project {} and shift and time : ')#.format(prj_name)) # , project.get('shift'), prj_time))# todo Add info to error!!!
     return update_list
 
 
