@@ -6,13 +6,16 @@ from __future__ import unicode_literals
 
 import httplib2
 import datetime
+import base64
 
 from googleapiclient import errors
 from apiclient import discovery
 from operator import itemgetter
+
 import calendar_parcer
 from source import TODAY, add_log, LOG_FILE, SCOPES, EQW_LIST, MON_REF, PC_REF
 from monitoring_sheet_parcer import parse_sheet
+from email.mime.text import MIMEText
 
 SCOPES = SCOPES.get('email')
 credentials = calendar_parcer.get_credentials(SCOPES, 'gmail-python.json')
@@ -32,8 +35,6 @@ def create_message(sender, to, subject, message_text):
     Returns:
       An object containing a base64url encoded email object.
     """
-    import base64
-    from email.mime.text import MIMEText
 
     message = MIMEText(message_text, 'html')
     message['to'] = to
@@ -85,7 +86,7 @@ def get_ref(project_name):
             dict from Monitoring table with key = project_name
     :return:
     """
-    monitoring = parse_sheet()
+    monitoring = parse_sheet()  # todo Вынести переменную чтобы постоянно не обращаться к файлу?
     prj_shortcut = get_shortcut(project_name)
     try:
         url = monitoring[prj_shortcut].get('URL')
@@ -113,9 +114,9 @@ def get_metadata(supporters, projects, update_list):
         p_t = datetime.datetime.fromtimestamp(update.get('prj_time'))  # project time
         s_n = update.get('sup_name')  # supporter_name
         s_id = update.get('sup_id')  # supporter id
-        supporter_dict = supporters['day'].get(s_n) if supporters['day'].has_key(s_n) else supporters['night'].get(s_n)
+        supporter_dict = supporters['day'].get(s_n) if s_n in supporters['day'] else supporters['night'].get(s_n)
         email = supporter_dict.get('email')
-        if not sup_data.has_key(s_n):
+        if s_n not in sup_data:
             sup_data[s_n] = []
         for project in projects:
             if project.get('name') == p_n and project.get('supporter')['id'] == s_id:
@@ -143,11 +144,11 @@ def send_email(supporters, projects, list_for_update):
     meta = get_metadata(supporters, projects, list_for_update)
     sender = 'me'
     subject = 'Назначены ручные проверки на ' + str(TODAY)
-    for supporter in meta:
-        name = supporter
-        to = 'a.simuskov@tetra-soft.ru' if TEST else meta[supporter].get('email')
-        data = meta[supporter].get('data')
-        data = sorted(data, key=itemgetter(0))
+    for s_n in meta:
+        name = s_n
+        to = 'a.simuskov@tetra-soft.ru' if TEST else meta[s_n].get('email')
+        data = meta[s_n].get('data')
+        data = sorted(data, key=itemgetter(0))  # sorted by Time
         main_text = ''
         for d in data:
             text = '<li>Ко времени <b>{}</b> Проект: <a href="{}">{}</a><br></li>'.format(*d)
@@ -186,7 +187,7 @@ def send_email(supporters, projects, list_for_update):
 
 
 def main():
-    print(get_ref(""))
+    print(get_ref("ООО \"Буровая компания \"Евразия\""))
 
 
 if __name__ == '__main__':

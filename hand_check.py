@@ -360,21 +360,12 @@ def main():
     else:
         supporters = get_supporters()  # +
         projects = get_projects()  # +
-        problems = get_problems('all', projects, supporters)  # +
+        # problems = get_problems('all', projects, supporters)  # +
         # list_for_update = update_table_quere(problems)  # +
-        update_list = [{u'prj_time': 1498046400L, u'prj_id': 2L, u'sup_name': u'n.bersan', u'sup_id': 87,
-                        u'prj_name': u'\u041e\u041e\u041e "\u042d\u0440\u0438\u044d\u043b\u043b \u041d\u0435\u0444\u0442\u0435\u0433\u0430\u0437\u0441\u0435\u0440\u0432\u0438\u0441"'},
-                       {u'prj_time': 1498035600L, u'prj_id': 88L, u'sup_name': u'n.bersan', u'sup_id': 87,
-                        u'prj_name': u'\u041e\u041e\u041e "\u0413\u0430\u0437\u043f\u0440\u043e\u043c \u0433\u0435\u043e\u043b\u043e\u0433\u043e\u0440\u0430\u0437\u0432\u0435\u0434\u043a\u0430"'},
-                       {u'prj_time': 1498050000L, u'prj_id': 213L, u'sup_name': u'n.bersan', u'sup_id': 87,
-                        u'prj_name': u'\u0410\u041e "\u0418\u043d\u0432\u0435\u0441\u0442\u0433\u0435\u043e\u0441\u0435\u0440\u0432\u0438\u0441"'},
-                       {u'prj_time': 1498039200L, u'prj_id': 230L, u'sup_name': u'n.bersan', u'sup_id': 87,
-                        u'prj_name': u'\u0410\u041e "\u0421\u0438\u0431\u0438\u0440\u0441\u043a\u0430\u044f \u0421\u0435\u0440\u0432\u0438\u0441\u043d\u0430\u044f \u041a\u043e\u043c\u043f\u0430\u043d\u0438\u044f"'},
-                       {u'prj_time': 1498050000L, u'prj_id': 215L, u'sup_name': u'n.bersan', u'sup_id': 87,
-                        u'prj_name': u'\u041e\u0410\u041e "\u041d\u041a "\u041d\u0435\u0444\u0442\u0438\u0441\u0430"'}]
+        update_list = [{u'prj_time': 1498046400L, u'prj_id': 1L, u'sup_name': u'a.ekimenko', u'sup_id': 84,
+                        u'prj_name': u'\u041e\u041e\u041e "\u0411\u0443\u0440\u043e\u0432\u0430\u044f \u043a\u043e\u043c\u043f\u0430\u043d\u0438\u044f "\u0415\u0432\u0440\u0430\u0437\u0438\u044f"'}]
 
         send_email(supporters, projects, update_list)
-
 
 if __name__ == '__main__':
     main()
