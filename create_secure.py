@@ -10,6 +10,7 @@ import codecs
 
 
 secure = {
+    'email_for_test':'',
     'mantis_http': {
         'user': '',
         'password': '',
