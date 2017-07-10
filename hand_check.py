@@ -11,7 +11,7 @@ import requests
 
 from source.calendar_parcer import get_supporters
 from source.dbconnect import get_projects, update_table, check_after_update
-from source.send_mail import send_email
+from source.send_mail import send_email, prepare_data_to_send
 from source import source
 
 # todo Придуть/создать CLI
@@ -125,13 +125,18 @@ def write_old(projects):
     :param projects:
     :return:
     """
-    for p in projects:
-        old = ' [OLD] Project : {p_n} : {p_t} supporter: {s_n} \n'.format(
-            p_n=p.get('name'),
-            p_t=datetime.fromtimestamp(p.get('time')),
-            s_n=p.get('sup')
-        )
-        source.add_log(old, file=source.LOG_FILE)
+    old = ''
+    if projects: # Если не None
+        for p in projects:
+            old = '[OLD] Project : {p_n} : {p_t} supporter: {s_n} \n'.format(
+                p_n=p.get('name'),
+                p_t=datetime.fromtimestamp(p.get('time')),
+                s_n=p.get('sup')
+            )
+    else: # Если None
+        old = '[OLD] All projects was checked!'
+
+    source.add_log(old, file=source.LOG_FILE)
 
 
 def write_updates(up_list):
@@ -149,7 +154,7 @@ def write_updates(up_list):
         Write to log_file
     """
     for up in up_list:
-        text = ' [UPDATE] Project : {p_n} : set time : {p_t} set supporter: {s_n} \n'.format(
+        text = '[UPDATE] Project : {p_n} : set time : {p_t} set supporter: {s_n} \n'.format(
             p_n=up.get('prj_name'),
             p_t=datetime.fromtimestamp(up.get('prj_time')),
             s_n=up.get('sup_name')
@@ -343,7 +348,7 @@ def main():
         # send_controller(supporters, projects, problems, after_update=True) -
 
         # =============Записываем в лог================
-        write_old(problems['projects'])
+        write_old(problems['delays'].get('old', None))
         write_updates(list_for_update)
         # =============================================
 
@@ -352,20 +357,32 @@ def main():
         # ======================================================
 
         projects_after_update = get_projects()
-        send_email(supporters, projects_after_update, list_for_update)
+        letters = prepare_data_to_send(supporters, projects_after_update, list_for_update)
+        send_email(letters)
 
         # отправляем запрос наобновление в базу
         # update_table(list_for_update)
         # print(check_after_update(UNIX_NOW))
     else:
-        supporters = get_supporters()  # +
-        projects = get_projects()  # +
-        # problems = get_problems('all', projects, supporters)  # +
-        # list_for_update = update_table_quere(problems)  # +
-        update_list = [{u'prj_time': 1498046400L, u'prj_id': 1L, u'sup_name': u'a.ekimenko', u'sup_id': 84,
-                        u'prj_name': u'\u041e\u041e\u041e "\u0411\u0443\u0440\u043e\u0432\u0430\u044f \u043a\u043e\u043c\u043f\u0430\u043d\u0438\u044f "\u0415\u0432\u0440\u0430\u0437\u0438\u044f"'}]
+        from source.source import EMAIL_FOR_TEST
+        letters = {
+            'me':{
+                'email':EMAIL_FOR_TEST,
+                'data':[('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
+                        ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
+                        ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
+                        ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
+                        ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
+                        ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
+                        ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
+                        ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
+                        ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
+                        ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
+                            ]
+            }
+        }
 
-        send_email(supporters, projects, update_list)
+        send_email(letters)
 
 if __name__ == '__main__':
     main()

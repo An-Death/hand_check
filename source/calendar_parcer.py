@@ -120,7 +120,6 @@ def to_unix_time(dts):
 
 def support_sort(schedule, name):
     """Добавляет grade в name"""
-
     grade_list = source.CALENDARS
     if name in source.LG_LIST:
         grade = 99
@@ -184,8 +183,8 @@ def get_supporters():
 
             if calendar == 'Отпуска службы сопровождения':
                 outs.append(name)
-            # todo Тупое условие. если в описании есть пробелы, значит эвент будет отбрасываться
             elif name.count(" ") > 0:
+                # todo Тупое условие. если в описании есть пробелы, значит эвент будет отбрасываться
                 outs.append(name)
             elif out_of_office(name, outs):
                 continue

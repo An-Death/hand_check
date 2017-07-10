@@ -4,20 +4,21 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import httplib2
-import datetime
 import base64
+import datetime
+import httplib2
 
 from googleapiclient import errors
 from apiclient import discovery
 from operator import itemgetter
 
 import calendar_parcer
-from source import TODAY, add_log, LOG_FILE, SCOPES, EQW_LIST, MON_REF, PC_REF
+import source
 from monitoring_sheet_parcer import parse_sheet
 from email.mime.text import MIMEText
 
-SCOPES = SCOPES.get('email')
+
+SCOPES = source.SCOPES.get('email')
 credentials = calendar_parcer.get_credentials(SCOPES, 'gmail-python.json')
 http = credentials.authorize(httplib2.Http())
 service = discovery.build('gmail', 'v1', http=http)
@@ -71,7 +72,7 @@ def get_shortcut(project_name):
     """
     # todo Переписать на соответствии network_id
 
-    eqw_list = EQW_LIST
+    eqw_list = source.EQW_LIST
     for prj in eqw_list:
         if prj[0] == project_name:
             return prj[1]
@@ -92,12 +93,12 @@ def get_ref(project_name):
         url = monitoring[prj_shortcut].get('URL')
         return url
     except KeyError:
-        log = ' [ERROR] Cannon get url for this Project: {} Return MONITORING_SHEET'.format(project_name)
-        add_log(log, file=LOG_FILE)
-        return MON_REF
+        log = '[ERROR] Cannon get url for this Project: {} Return MONITORING_SHEET'.format(project_name)
+        source.add_log(log, file=source.LOG_FILE)
+        return source.MON_REF
 
 
-def get_metadata(supporters, projects, update_list):
+def prepare_data_to_send(supporters, projects, update_list):
     """Возвращаем Мету для почты
 
 
@@ -110,49 +111,47 @@ def get_metadata(supporters, projects, update_list):
     sup_data = {}  # Дикт с именам саппортеров для складирования проектов
 
     for update in update_list:
-        p_n = update.get('prj_name')  # project_name
-        p_t = datetime.datetime.fromtimestamp(update.get('prj_time'))  # project time
-        s_n = update.get('sup_name')  # supporter_name
-        s_id = update.get('sup_id')  # supporter id
-        supporter_dict = supporters['day'].get(s_n) if s_n in supporters['day'] else supporters['night'].get(s_n)
+        project_name = update.get('prj_name')
+        project_time = datetime.datetime.fromtimestamp(update.get('prj_time'))
+        supporter_name = update.get('sup_name')
+        supporter_id = update.get('sup_id')
+        supporter_dict = supporters['day'].get(supporter_name) if supporter_name in supporters['day'] else supporters['night'].get(supporter_name)
         email = supporter_dict.get('email')
-        if s_n not in sup_data:
-            sup_data[s_n] = []
+        if supporter_name not in sup_data:
+            sup_data[supporter_name] = []
         for project in projects:
-            if project.get('name') == p_n and project.get('supporter')['id'] == s_id:
-                ref = get_ref(p_n)
-                data_tuple = (p_t, ref.split('\n')[0], p_n)
-                sup_data[s_n].append(data_tuple)
-                dict_after_check[s_n] = {
+            if project.get('name') == project_name and project.get('supporter')['id'] == supporter_id:
+                ref = get_ref(project_name)
+                data_tuple = (project_time, ref.split('\n')[0], project_name)
+                sup_data[supporter_name].append(data_tuple)
+                dict_after_check[supporter_name] = {
                     'email': email,
-                    'data': sup_data[s_n]
+                    'data': sup_data[supporter_name]
                 }
                 break
     return dict_after_check
 
 
-def send_email(supporters, projects, list_for_update):
+def send_email(letters):
     """Заглавная функция в ней и происходит подготовка и отправка письма
 
-    :param supporters:
-    :param projects:
-    :param list_for_update:
+    :param letters
     :return:
     """
     from hand_check import TEST
 
-    meta = get_metadata(supporters, projects, list_for_update)
     sender = 'me'
-    subject = 'Назначены ручные проверки на ' + str(TODAY)
-    for s_n in meta:
+    subject = 'Назначены ручные проверки на {}'.format(str(source.TODAY))
+    for s_n in letters:
         name = s_n
-        to = 'a.simuskov@tetra-soft.ru' if TEST else meta[s_n].get('email')
-        data = meta[s_n].get('data')
+        to = source.EMAIL_FOR_TEST if TEST else letters[s_n].get('email')
+        data = letters[s_n].get('data')
         data = sorted(data, key=itemgetter(0))  # sorted by Time
-        main_text = ''
+        letter_text = []
         for d in data:
             text = '<li>Ко времени <b>{}</b> Проект: <a href="{}">{}</a><br></li>'.format(*d)
-            main_text = main_text + text
+            letter_text.append(text)
+        main_text = ''.join(letter_text)
         message = """
         <html>
             <head></head>
@@ -162,9 +161,9 @@ def send_email(supporters, projects, list_for_update):
                 </p>
                 <p>
                     На вас назначены проверки по следующим проектам:<br>
-                    <legend>
-                            {list}
-                    </legend>
+                    <ol>
+                        {list}
+                    </ol>
                 </p>
                 <p>
                     Не забывайте отмечать выполенные проверки!
@@ -180,14 +179,14 @@ def send_email(supporters, projects, list_for_update):
                 </p>
             </body>
         </html>    
-        """.format(name=name, list=main_text, monitoring=MON_REF, pc=PC_REF)
+        """.format(name=name, list=main_text, monitoring=source.MON_REF, pc=source.PC_REF)
 
         message = create_message(sender, to, subject, message.encode('utf-8'))
         send_message(service, message)
 
 
 def main():
-    print(get_ref("ООО \"Буровая компания \"Евразия\""))
+    print(get_ref(''))
 
 
 if __name__ == '__main__':

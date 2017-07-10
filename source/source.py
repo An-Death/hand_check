@@ -20,6 +20,7 @@ LG_LIST = SECURE.get('lg_list')
 EQW_LIST = SECURE.get('eqw_list')
 MON_REF = SECURE.get('mon_ref')
 PC_REF = SECURE.get('pc_ref')
+EMAIL_FOR_TEST = SECURE.get('email_for_test')
 
 JSLIST = "log/calendars.json"
 LOG_FILE = "log/hand_check.log"
@@ -63,5 +64,5 @@ def close_fd(file_descriptor):
 
 def add_log(data, file=LOG_FILE):
     with codecs.open(file, 'a', encoding='utf-8') as fd:
-        log_data = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + data
+        log_data = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' ' + data
         fd.write(log_data)
