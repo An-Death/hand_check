@@ -4,13 +4,14 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import requests
+
 from collections import defaultdict
 from datetime import datetime, date
 from time import time, mktime
-import requests
 
 from source.calendar_parcer import get_supporters
-from source.dbconnect import get_projects, update_table, check_after_update
+from source.dbconnect import get_projects  # , update_table, check_after_update
 from source.send_mail import send_email, prepare_data_to_send
 from source import source
 
@@ -20,32 +21,16 @@ UNIX_NOW = int(time())
 TEST = False
 
 
-# SECURE = source.SECURE
+def send_telegramm(who, message):
+    """
+    :param who: chat_id
+    :param message:
+    :return:
+    """
+    token = source.TELEGRAMM_TOKEN
+    url = 'https://api.telegram.org/bot{}/'.format(token)
 
-#
-# def send_mail(too_old):
-#     pass
-#
-#
-# def send_telegram(arg):
-#     pass
-#
-#
-# def send_controller(way, data_to_send, after_update=False):
-#     """
-#     telegram:
-#         Отправляем просроченные проверки (более 3х дней)
-#         Отправляем пустые смены (0 человек в shift)
-#     mail/log:
-#         Отправляем все не отмеченные проверки Максу и Мне
-#         Отправляем адресату назначенные проверки
-#
-#     after_update
-#         False - (по умолчанию) отправляем по проблемам и ошибкам.
-#         True - логируем произведённые обновления и отправляем письма на назначенных
-#     """
-#
-#     pass
+    pass
 
 
 def overdue(projects):
@@ -86,10 +71,10 @@ def empty_shifts(supporters):
         Отправляем в телеграмм пустую смену
         Или False если ничего нет потом переделаем
     """
-    if len(supporters['day']) == 0:
+    if not supporters['day']:
         pass
-    elif len(supporters['night']) == 0:
-        pass
+    elif not supporters['night']:
+        pass # todo Дописать обработку отсутствия людей на смене
 
     return supporters
 
@@ -126,14 +111,14 @@ def write_old(projects):
     :return:
     """
     old = ''
-    if projects: # Если не None
+    if projects:  # Если не None
         for p in projects:
             old = '[OLD] Project : {p_n} : {p_t} supporter: {s_n} \n'.format(
                 p_n=p.get('name'),
                 p_t=datetime.fromtimestamp(p.get('time')),
                 s_n=p.get('sup')
             )
-    else: # Если None
+    else:  # Если None
         old = '[OLD] All projects was checked!'
 
     source.add_log(old, file=source.LOG_FILE)
@@ -189,8 +174,8 @@ def update_table_quere(problems):
     """
 
     update_list = []
-    cache = {}
-    cache_con = {}
+    cache = {'day':{}, 'night':{}}
+    cache_con = {'day':{}, 'night':{}}
     supporters = problems['shift']
     projects = problems['projects']
     problem = problems['delays']
@@ -200,7 +185,7 @@ def update_table_quere(problems):
         """
         Проворачивает внутри себя магию и на выходе возвращает Саппортера на которого надо назначить проверку.
         :type supporters: object
-        :param supporters:
+        :param supporters: project, grade_list
         :param project:
         :return:
             support_name
@@ -220,26 +205,26 @@ def update_table_quere(problems):
                 if trigger is True:
                     name = supporter.get('login')
                     if project.get('con'):
-                        cached_con = cache_con.keys()
+                        cached_con = cache_con[shift].keys()
                         if name not in cached_con:
-                            cache_con[name] = 1
+                            cache_con[shift][name] = 1
                             return re_user(supporter)
                         elif name in cached_con and len(cached_con) != gl.get(n):
                             continue
                         elif name in cached_con and len(cached_con) == gl.get(n):
-                            cache_con.clear()
-                            cache_con[name] = 1
+                            cache_con[shift].clear()
+                            cache_con[shift][name] = 1
                             return re_user(supporter)
                     else:
-                        cached = cache.keys()
+                        cached = cache[shift].keys()
                         if name not in cached:
                             cache[name] = 1
                             return re_user(supporter)
-                        elif name in cached and len(cache) != gl.get(n):
+                        elif name in cached and len(cached) != gl.get(n): #todo Сравнение не по длине а по кол-ву назначенных проектов
                             continue
                         elif name in cached and len(cached) == gl.get(n):
-                            cache.clear()
-                            cache[name] = 1
+                            cache[shift].clear()
+                            cache[shift][name] = 1
                             return re_user(supporter)
                 else:
                     return re_user(supporter)
@@ -248,8 +233,7 @@ def update_table_quere(problems):
         p_time = project.get('time')  # unix time int
         shift = project.get('shift')  # string (day/night)
         gl = grade_list[0] if shift == 'day' else grade_list[1]
-
-        grade = sorted(gl.keys(), reverse=True)[0]  # Get highest grade from list
+        grade = sorted(gl.keys(), reverse=False)[-1]  # Get highest grade from list
         if gl.get(grade) == 1:
             user_data = set_all(grade)
         elif gl.get(grade) > 1:
@@ -271,6 +255,7 @@ def update_table_quere(problems):
                 p_n=project.get('name')
             )
             source.add_log(old_log_str, file=source.LOG_FILE)  # Print too old in log
+            continue
         elif project in problem.get('old'):  # Update time for old
             time_from_table = datetime.fromtimestamp(project['time']).time()
             update_time = datetime.combine(date.today(), time_from_table)
@@ -292,7 +277,11 @@ def update_table_quere(problems):
             }
             update_list.append(update)
         else:
-            raise TypeError('[ERROR] Cannot get sup data for project {} and shift and time : ')#.format(prj_name)) # , project.get('shift'), prj_time))# todo Add info to error!!!
+            # raise TypeError:
+            print('[ERROR] Cannot get sup data for project  [ {} ] and shift and time : '.format(
+                    prj_name))  # , project.get('shift'), prj_time))# todo Add info to error!!!
+            exit(1)
+
     return update_list
 
 
@@ -366,23 +355,24 @@ def main():
     else:
         from source.source import EMAIL_FOR_TEST
         letters = {
-            'me':{
-                'email':EMAIL_FOR_TEST,
-                'data':[('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
-                        ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
-                        ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
-                        ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
-                        ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
-                        ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
-                        ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
-                        ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
-                        ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
-                        ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
-                            ]
+            'me': {
+                'email': EMAIL_FOR_TEST,
+                'data': [('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
+                         ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
+                         ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
+                         ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
+                         ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
+                         ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
+                         ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
+                         ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
+                         ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
+                         ('2017-01-01 01:01:01', 'some_ref', 'some_project_name'),
+                         ]
             }
         }
 
         send_email(letters)
+
 
 if __name__ == '__main__':
     main()
