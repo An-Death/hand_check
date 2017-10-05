@@ -115,7 +115,7 @@ def get_user_info(summary):
         request = CB.query(user_table.e_mail).filter(user_table.fio.like(l_name))
         result = request.first()
         email = result[0]
-        login = email.split('@', 1)[0] if email != 'maxim@tetra-soft.ru' else 'm.pavlov'
+        login = email.split('@', 1)[0] if email != 'maxim@tetraservice.ru' else 'm.pavlov'
         sup_id = MAN.query(mut.id).filter_by(username=login).one()[0]
         # fio = result[1] # Можно получать фио
         return {'email': email,
@@ -123,7 +123,7 @@ def get_user_info(summary):
                 'id': sup_id
                 #'fio':fio
                 }
-    except TypeError:
+    except Exception:
         raise NameError(' [ERROR] Modul : " {} " : User with this summary: "{}" does not exist! '.format('get_user_info()' ,summary))
 
 
