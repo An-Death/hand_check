@@ -10,6 +10,7 @@ import codecs
 
 
 secure = {
+    'telegramm_token':'',
     'email_for_test':'',
     'mantis_http': {
         'user': '',
