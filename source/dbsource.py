@@ -50,7 +50,6 @@ class Mantis_project_check_table(Base):
     def __repr__(self):
         return "<mantis_project_check_table({},{},{},{})>".format(self.id, self.need, self.user, self.time)
 
-
 class Mantis_project_table(Base):
     __tablename__ = 'mantis_project_table'
 

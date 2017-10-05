@@ -107,6 +107,7 @@ def prepare_data_to_send(supporters, projects, update_list):
     :param update_list:
     :return:
     """
+
     dict_after_check = {}
     sup_data = {}  # Дикт с именам саппортеров для складирования проектов
 
@@ -118,16 +119,16 @@ def prepare_data_to_send(supporters, projects, update_list):
         supporter_dict = supporters['day'].get(supporter_name) if supporter_name in supporters['day'] else supporters['night'].get(supporter_name)
         email = supporter_dict.get('email')
         if supporter_name not in sup_data:
-            sup_data[supporter_name] = []
+            sup_data[supporter_name] = [] # Создаём лист с именем сапортера
         for project in projects:
             if project.get('name') == project_name and project.get('supporter')['id'] == supporter_id:
                 ref = get_ref(project_name)
-                data_tuple = (project_time, ref.split('\n')[0], project_name)
-                sup_data[supporter_name].append(data_tuple)
+                data_tuple = (project_time, ref.split('\n')[0], project_name) # Всегда берём первую ссылку и Monitoring
+                sup_data[supporter_name].append(data_tuple) # добавляем назначенные на него проекты
                 dict_after_check[supporter_name] = {
                     'email': email,
                     'data': sup_data[supporter_name]
-                }
+                } # Запихивыем в дикт запись типа : 'Симуськов': {email, и лист из кортежей с проектами}
                 break
     return dict_after_check
 
