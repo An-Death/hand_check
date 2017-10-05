@@ -15,6 +15,7 @@ APPLICATION_NAME = SECURE.get('application_name')
 CALENDARS = SECURE.get('calendars')
 
 CLIENT_SECRET_FILE = 'secure/client_secret.json'
+TELEGRAMM_TOKEN = SECURE.get('telegramm_token')
 
 LG_LIST = SECURE.get('lg_list')
 EQW_LIST = SECURE.get('eqw_list')
