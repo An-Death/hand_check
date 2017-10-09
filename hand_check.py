@@ -280,7 +280,8 @@ def update_table_quere(problems):
             # raise TypeError:
             print('[ERROR] Cannot get sup data for project  [ {} ] and shift and time : '.format(
                     prj_name))  # , project.get('shift'), prj_time))# todo Add info to error!!!
-            exit(1)
+            continue
+            # exit(1)
 
     return update_list
 
