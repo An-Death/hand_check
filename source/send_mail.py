@@ -93,7 +93,7 @@ def get_ref(project_name):
         url = monitoring[prj_shortcut].get('URL')
         return url
     except KeyError:
-        log = '[ERROR] Cannon get url for this Project: {} Return MONITORING_SHEET'.format(project_name)
+        log = '[ERROR] Cannon get url for this Project: {} Return MONITORING_SHEET\n'.format(project_name)
         source.add_log(log, file=source.LOG_FILE)
         return source.MON_REF
 
