@@ -174,8 +174,8 @@ def update_table_quere(problems):
     """
 
     update_list = []
-    cache = {'day':{}, 'night':{}}
-    cache_con = {'day':{}, 'night':{}}
+    cache = {'day':defaultdict(int), 'night':defaultdict(int)}
+    cache_con = {'day':defaultdict(int), 'night':defaultdict(int)}
     supporters = problems['shift']
     projects = problems['projects']
     problem = problems['delays']
@@ -191,43 +191,60 @@ def update_table_quere(problems):
             support_name
         """
 
-        def set_all(n, trigger=False):
+        def set_all(n, more_then_one=False):
             def re_user(sp):
-                if sp.get('end') > p_time > sp.get('start'):
                     user_name = sp.get('login')
                     user_id = sp.get('id')
                     return {'id': user_id, 'name': user_name}
 
             for supporter_name in supporters[shift]:  # keys of dict
                 supporter = supporters[shift].get(supporter_name)
+                # Проверяем грэйд
                 if supporter.get('grade') != n:
                     continue
-                if trigger is True:
+                # Проверяем смену
+                if not supporter.get('end') > p_time > supporter.get('start'):
+                    continue
+                # Если на смене больше одного саппортера, запускаем ебацикл
+                if not more_then_one:
+                    return re_user(supporter)
+                else:
                     name = supporter.get('login')
                     if project.get('con'):
                         cached_con = cache_con[shift].keys()
                         if name not in cached_con:
-                            cache_con[shift][name] = 1
+                            # Если на сапа нету в кэше, мы добавляем запись в дикт с именем сапа
+                            # И присвыиваем значение назначенный проектов =1
+                            cache_con[shift][name] += 1
                             return re_user(supporter)
-                        elif name in cached_con and len(cached_con) != gl.get(n):
+                        elif len(cached_con) != gl.get(n):
+                            # переходим к следующему саппортеру
                             continue
-                        elif name in cached_con and len(cached_con) == gl.get(n):
-                            cache_con[shift].clear()
-                            cache_con[shift][name] = 1
-                            return re_user(supporter)
+                        elif len(cached_con) == gl.get(n):
+                            # если кл-во сапортеров равно количеству сапов в грейде,
+                            # то сравниваем сапортеров по кол-ву назначенных на них проектов
+                            last_sup = sorted(cache_con[shift].items(), key=lambda x:x[1], reverse = True)[-1]
+                            if name == last_sup[0]:
+                                # Если это нужный нам саg
+                                cache_con[shift][name] += 1
+                                return  re_user(supporter)
+                            else:
+                                continue
                     else:
                         cached = cache[shift].keys()
                         if name not in cached:
-                            cache[name] = 1
+                            cache[name] += 1
                             return re_user(supporter)
-                        elif name in cached and len(cached) != gl.get(n): #todo Сравнение не по длине а по кол-ву назначенных проектов
+                        elif len(cached) != gl.get(n):
                             continue
-                        elif name in cached and len(cached) == gl.get(n):
-                            cache[shift].clear()
-                            cache[shift][name] = 1
-                            return re_user(supporter)
-                else:
-                    return re_user(supporter)
+                        elif len(cached) == gl.get(n):
+                            last_sup = sorted(cache[shift].items(), key=lambda x:x[1], reverse = True)[-1]
+                            if name == last_sup[0]:
+                                cache[shift][name] += 1
+                                return re_user(supporter)
+                            else:
+                                continue
+
 
         user_data = (None, None)  # Default assign to None
         p_time = project.get('time')  # unix time int
@@ -237,7 +254,7 @@ def update_table_quere(problems):
         if gl.get(grade) == 1:
             user_data = set_all(grade)
         elif gl.get(grade) > 1:
-            user_data = set_all(grade, trigger=True)
+            user_data = set_all(grade, more_then_one=True)
         return user_data
 
     # 1. Если проект уже назначен, пропускаем его
