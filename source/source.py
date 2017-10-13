@@ -4,12 +4,12 @@ from __future__ import unicode_literals
 import codecs
 import json
 import datetime
+
 with codecs.open('secure/secure.json', 'r', encoding='utf-8') as fd:
     SECURE = json.load(fd)
 
 SCOPES = SECURE.get('scopes')
 APPLICATION_NAME = SECURE.get('application_name')
-
 
 # todo Создать возможность добавлять, удалять календари из переменной
 CALENDARS = SECURE.get('calendars')
@@ -27,9 +27,10 @@ JSLIST = "log/calendars.json"
 LOG_FILE = "log/hand_check.log"
 MOT_TABLE = "log/monitoring_data.json"
 
-TASK = SECURE.get('project_with_tasks') # Проекты с доп задачами: Сводки, Статусы
+TASK = SECURE.get('project_with_tasks')  # Проекты с доп задачами: Сводки, Статусы
 
 TODAY = datetime.datetime.today().date()
+
 
 def write_json(file, data, indent=4, rw='w'):
     with codecs.open(file, rw, encoding='utf-8') as wf:
@@ -37,14 +38,14 @@ def write_json(file, data, indent=4, rw='w'):
 
 
 def read_json(file):
-    with codecs.open(file, 'r', encoding='utf-8') as fd:
-        calendars_list = json.load(fd)
+    with codecs.open(file, 'r', encoding='utf-8') as file_descriptor:
+        calendars_list = json.load(file_descriptor)
         return calendars_list
 
 
 def return_fd(path_to_file):
-    fd = codecs.open(path_to_file, 'a', encoding='utf-8')
-    return fd
+    file_descriptor = codecs.open(path_to_file, 'a', encoding='utf-8')
+    return file_descriptor
 
 
 def add_log_mantis(update_dict, file_descriptor):
@@ -64,6 +65,6 @@ def close_fd(file_descriptor):
 
 
 def add_log(data, file=LOG_FILE):
-    with codecs.open(file, 'a', encoding='utf-8') as fd:
+    with codecs.open(file, 'a', encoding='utf-8') as file_descriptor:
         log_data = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' ' + data
-        fd.write(log_data)
+        file_descriptor.write(log_data)

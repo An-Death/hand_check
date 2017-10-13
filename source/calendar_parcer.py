@@ -155,7 +155,7 @@ def get_supporters():
               'out_of_office': []
               }
 
-    credentials = get_credentials(SCOPES, 'calendar-python.json') # todo move to special func
+    credentials = get_credentials(SCOPES, 'calendar-python.json')  # todo move to special func
     http = credentials.authorize(httplib2.Http())
     service = discovery.build('calendar', 'v3', http=http)
     start_day = time_master(0) + '+0300'  # Время 8:00 MSK // + Z is default UTC timezone. requared for request
@@ -198,10 +198,10 @@ def get_supporters():
                     login = user_info.get('login')
                     sup_id = user_info.get('id')
                 else:
-                    email, login, sup_id = (None, ) * 3 # if did't find any data in DB
+                    email, login, sup_id = (None, ) * 3  # if did't find any data in DB
 
                 supporter_data = {
-                    'id':sup_id,
+                    'id': sup_id,
                     'name': name,
                     'organizer': schedule,
                     'grade': grade,

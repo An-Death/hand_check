@@ -74,7 +74,7 @@ def empty_shifts(supporters):
     if not supporters['day']:
         pass
     elif not supporters['night']:
-        pass # todo Дописать обработку отсутствия людей на смене
+        pass  # todo Дописать обработку отсутствия людей на смене
 
     return supporters
 
@@ -174,8 +174,8 @@ def update_table_quere(problems):
     """
 
     update_list = []
-    cache = {'day':defaultdict(int), 'night':defaultdict(int)}
-    cache_con = {'day':defaultdict(int), 'night':defaultdict(int)}
+    cache = {'day': defaultdict(int), 'night': defaultdict(int)}
+    cache_con = {'day': defaultdict(int), 'night': defaultdict(int)}
     supporters = problems['shift']
     projects = problems['projects']
     problem = problems['delays']
@@ -193,9 +193,9 @@ def update_table_quere(problems):
 
         def set_all(n, more_then_one=False):
             def re_user(sp):
-                    user_name = sp.get('login')
-                    user_id = sp.get('id')
-                    return {'id': user_id, 'name': user_name}
+                user_name = sp.get('login')
+                user_id = sp.get('id')
+                return {'id': user_id, 'name': user_name}
 
             for supporter_name in supporters[shift]:  # keys of dict
                 supporter = supporters[shift].get(supporter_name)
@@ -205,11 +205,13 @@ def update_table_quere(problems):
                 # Проверяем смену
                 if not supporter.get('end') > p_time > supporter.get('start'):
                     continue
-                # Если на смене больше одного саппортера, запускаем ебацикл
                 if not more_then_one:
+                    # Если на смене только один сап - всё на него
                     return re_user(supporter)
                 else:
+                    # Если на смене больше одного саппортера, запускаем ебацикл
                     name = supporter.get('login')
+                    # Делим на проекты с доп задачими и без
                     if project.get('con'):
                         cached_con = cache_con[shift].keys()
                         if name not in cached_con:
@@ -223,11 +225,11 @@ def update_table_quere(problems):
                         elif len(cached_con) == gl.get(n):
                             # если кл-во сапортеров равно количеству сапов в грейде,
                             # то сравниваем сапортеров по кол-ву назначенных на них проектов
-                            last_sup = sorted(cache_con[shift].items(), key=lambda x:x[1], reverse = True)[-1]
+                            last_sup = sorted(cache_con[shift].items(), key=lambda x: x[1], reverse=True)[-1]
                             if name == last_sup[0]:
                                 # Если это нужный нам саg
                                 cache_con[shift][name] += 1
-                                return  re_user(supporter)
+                                return re_user(supporter)
                             else:
                                 continue
                     else:
@@ -238,13 +240,12 @@ def update_table_quere(problems):
                         elif len(cached) != gl.get(n):
                             continue
                         elif len(cached) == gl.get(n):
-                            last_sup = sorted(cache[shift].items(), key=lambda x:x[1], reverse = True)[-1]
+                            last_sup = sorted(cache[shift].items(), key=lambda x: x[1], reverse=True)[-1]
                             if name == last_sup[0]:
                                 cache[shift][name] += 1
                                 return re_user(supporter)
                             else:
                                 continue
-
 
         user_data = (None, None)  # Default assign to None
         p_time = project.get('time')  # unix time int
@@ -296,7 +297,7 @@ def update_table_quere(problems):
         else:
             # raise TypeError:
             print('[ERROR] Cannot get sup data for project  [ {} ] and shift and time : '.format(
-                    prj_name))  # , project.get('shift'), prj_time))# todo Add info to error!!!
+                prj_name))  # , project.get('shift'), prj_time))# todo Add info to error!!!
             continue
             # exit(1)
 
