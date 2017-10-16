@@ -235,7 +235,7 @@ def update_table_quere(problems):
                     else:
                         cached = cache[shift].keys()
                         if name not in cached:
-                            cache[name] += 1
+                            cache[shift][name] += 1
                             return re_user(supporter)
                         elif len(cached) != gl.get(n):
                             continue
