@@ -28,7 +28,7 @@ def parse_from_google():
                               discoveryServiceUrl=discoveryUrl)
 
     spreadsheetId = SHEET_ID
-    rangeHeadTable = 'A3:S35'
+    rangeHeadTable = 'A3:S41'
     result = service.spreadsheets().values().get(
         spreadsheetId=spreadsheetId, range=rangeHeadTable).execute()
     values = result.get('values', [])

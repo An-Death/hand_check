@@ -9,7 +9,7 @@ from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 import source
-from dbsource import Cb_users as user_table, Cb_data42 as pr_data
+from dbsource import Cb_data42 as pr_data
 from dbsource import engine
 from dbsource import (Mantis_project_check_table as mct,
                       Mantis_user_table as mut,
@@ -17,8 +17,9 @@ from dbsource import (Mantis_project_check_table as mct,
 
 MAN = Session(bind=engine('mantis'))
 CB = Session(bind=engine('cb'))
-#TEST = Session(bind=engine('test'))
+# TEST = Session(bind=engine('test'))
 LOG = []
+
 
 def get_shift_by_time(project_time):
     """
@@ -33,6 +34,7 @@ def get_shift_by_time(project_time):
     end_day = time(20, 0, 0)
     return 'day' if end_day > pt > start_day else 'night'
 
+
 def get_projects2():
     """Возвращаем лист с диктами projects
     Больше не используется
@@ -41,7 +43,6 @@ def get_projects2():
 
     MANTIS = engine('mantis')
     CLIENT_BASE = engine('cb')
-    # todo Переписакть под Session > DONE
     projects = []
     with MANTIS.begin() as man:
         row_projects = man.execute(
@@ -82,10 +83,10 @@ def get_projects():
     """
 
     projects = []
-    row_projects = MAN.query(mct.id, mpt.name, mct.need, mct.user, mut.username, mct.time).\
-        outerjoin(mpt, mpt.id == mct.id).\
-        outerjoin(mut, mut.id == mct.user).\
-        filter(mct.need > 0).\
+    row_projects = MAN.query(mct.id, mpt.name, mct.need, mct.user, mut.username, mct.time). \
+        outerjoin(mpt, mpt.id == mct.id). \
+        outerjoin(mut, mut.id == mct.user). \
+        filter(mct.need > 0). \
         all()
     for pr in row_projects:
         shift = get_shift_by_time(pr.time)
@@ -103,6 +104,7 @@ def get_projects():
         projects.append(project)
     return projects
 
+
 def get_user_info(summary):
     """
     Получаем email и логин нужного пользователя из мантиса
@@ -112,19 +114,21 @@ def get_user_info(summary):
 
     l_name = r'%{}%'.format(summary)
     try:
-        request = CB.query(user_table.e_mail).filter(user_table.fio.like(l_name))
-        result = request.first()
-        email = result[0]
-        login = email.split('@', 1)[0] if email != 'maxim@tetraservice.ru' else 'm.pavlov'
-        sup_id = MAN.query(mut.id).filter_by(username=login).one()[0]
-        # fio = result[1] # Можно получать фио
-        return {'email': email,
-                'login': login,
-                'id': sup_id
-                #'fio':fio
+        # request = CB.query(user_table.e_mail).filter(user_table.fio.like(l_name))
+        # result = request.first()
+        # email = result[0]
+        # login = email.split('@', 1)[0] if email != 'maxim@tetraservice.ru' else 'm.pavlov'
+        sup_info = MAN.query(mut.id).filter_by(mut.realname.like(l_name)).one()[0]
+        # fio = result[1] # Можно получать фиo
+        return {'email': sup_info.email,
+                'login': sup_info.username,
+                'id': sup_info.id
+                # 'fio':fio
                 }
     except Exception:
-        raise NameError(' [ERROR] Modul : " {} " : User with this summary: "{}" does not exist! '.format('get_user_info()' ,summary))
+        raise NameError(
+            ' [ERROR] Module : " {} " : User with this summary: "{}" does not exist! '.format('get_user_info()',
+                                                                                             summary))
 
 
 def update_table(list_for_update):
@@ -142,15 +146,17 @@ def update_table(list_for_update):
         source.add_log_mantis(up, fd)
     source.close_fd(fd)
 
+
 def check_after_update(UNIX_NOW):
     """Not ready
 
     :param UNIX_NOW:
     :return:
     """
-    quere = MAN.query(mct).filter(and_(mct.need > 0, mct.user == 0, mct.time < UNIX_NOW ))
-    result  = quere.all()
+    quere = MAN.query(mct).filter(and_(mct.need > 0, mct.user == 0, mct.time < UNIX_NOW))
+    result = quere.all()
     return result
+
 
 def main():
     # get_projects2()
@@ -160,6 +166,7 @@ def main():
     # )
     # query = query.outerjoin(mut, mut.id == mct.user)
     # rec = query.all()
+
 
 if __name__ == '__main__':
     main()

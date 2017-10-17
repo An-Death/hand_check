@@ -211,41 +211,36 @@ def update_table_quere(problems):
                 else:
                     # Если на смене больше одного саппортера, запускаем ебацикл
                     name = supporter.get('login')
-                    # Делим на проекты с доп задачими и без
-                    if project.get('con'):
-                        cached_con = cache_con[shift].keys()
-                        if name not in cached_con:
-                            # Если на сапа нету в кэше, мы добавляем запись в дикт с именем сапа
-                            # И присвыиваем значение назначенный проектов =1
-                            cache_con[shift][name] += 1
-                            return re_user(supporter)
-                        elif len(cached_con) != gl.get(n):
-                            # переходим к следующему саппортеру
-                            continue
-                        elif len(cached_con) == gl.get(n):
-                            # если кл-во сапортеров равно количеству сапов в грейде,
-                            # то сравниваем сапортеров по кол-ву назначенных на них проектов
-                            last_sup = sorted(cache_con[shift].items(), key=lambda x: x[1], reverse=True)[-1]
-                            if name == last_sup[0]:
-                                # Если это нужный нам саg
-                                cache_con[shift][name] += 1
-                                return re_user(supporter)
-                            else:
-                                continue
-                    else:
-                        cached = cache[shift].keys()
-                        if name not in cached:
-                            cache[shift][name] += 1
-                            return re_user(supporter)
-                        elif len(cached) != gl.get(n):
-                            continue
-                        elif len(cached) == gl.get(n):
-                            last_sup = sorted(cache[shift].items(), key=lambda x: x[1], reverse=True)[-1]
-                            if name == last_sup[0]:
-                                cache[shift][name] += 1
-                                return re_user(supporter)
-                            else:
-                                continue
+                    # if project.get('con'):                    # Делим на проекты с доп задачими и без
+                    cached_con = cache_con[shift].keys()
+                    if name not in cached_con:
+                        # Если на сапа нету в кэше, мы добавляем запись в дикт с именем сапа
+                        # И присвыиваем значение назначенный проектов =1
+                        cache_con[shift][name] += 1
+                        return re_user(supporter)
+                    elif len(cached_con) != gl.get(n):
+                        # переходим к следующему саппортеру
+                        continue
+                    elif len(cached_con) == gl.get(n):
+                        # если кл-во сапортеров равно количеству сапов в грейде,
+                        # то сравниваем сапортеров по кол-ву назначенных на них проектов
+                        last_sup = sorted(cache_con[shift].items(), key=lambda x: x[1], reverse=True)[-1]
+                        cache_con[shift][last_sup[0]] += 1
+                        return re_user(supporter)
+                    # else:
+                    #     cached = cache[shift].keys()
+                    #     if name not in cached:
+                    #         cache[shift][name] += 1
+                    #         return re_user(supporter)
+                    #     elif len(cached) != gl.get(n):
+                    #         continue
+                    #     elif len(cached) == gl.get(n):
+                    #         last_sup = sorted(cache[shift].items(), key=lambda x: x[1], reverse=True)[-1]
+                    #         if name == last_sup[0]:
+                    #             cache[shift][name] += 1
+                    #             return re_user(supporter)
+                    #         else:
+                    #             continue
 
         user_data = (None, None)  # Default assign to None
         p_time = project.get('time')  # unix time int
