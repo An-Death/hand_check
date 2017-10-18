@@ -191,7 +191,7 @@ def update_table_quere(problems):
             support_name
         """
 
-        def set_all(n, more_then_one=False):
+        def set_all(n, one_supporter_on_shift=True):
             def re_user(sp):
                 user_name = sp.get('login')
                 user_id = sp.get('id')
@@ -205,53 +205,42 @@ def update_table_quere(problems):
                 # Проверяем смену
                 if not supporter.get('end') > p_time > supporter.get('start'):
                     continue
-                if not more_then_one:
+                if one_supporter_on_shift:
                     # Если на смене только один сап - всё на него
                     return re_user(supporter)
                 else:
                     # Если на смене больше одного саппортера, запускаем ебацикл
                     name = supporter.get('login')
-                    # if project.get('con'):                    # Делим на проекты с доп задачими и без
-                    cached_con = cache_con[shift].keys()
-                    if name not in cached_con:
+                    cache_list = cache_con if project.get('con') else cache
+                    cached_sup = cache_list[shift].keys()
+                    if name not in cached_sup:
                         # Если на сапа нету в кэше, мы добавляем запись в дикт с именем сапа
                         # И присвыиваем значение назначенный проектов =1
+                        # todo Добавить логирования.
                         cache_con[shift][name] += 1
                         return re_user(supporter)
-                    elif len(cached_con) != gl.get(n):
+                    elif len(cached_sup) != gl.get(n):
                         # переходим к следующему саппортеру
                         continue
-                    elif len(cached_con) == gl.get(n):
+                    elif len(cached_sup) == gl.get(n):
                         # если кл-во сапортеров равно количеству сапов в грейде,
                         # то сравниваем сапортеров по кол-ву назначенных на них проектов
                         last_sup = sorted(cache_con[shift].items(), key=lambda x: x[1], reverse=True)[-1]
                         cache_con[shift][last_sup[0]] += 1
                         return re_user(supporter)
-                    # else:
-                    #     cached = cache[shift].keys()
-                    #     if name not in cached:
-                    #         cache[shift][name] += 1
-                    #         return re_user(supporter)
-                    #     elif len(cached) != gl.get(n):
-                    #         continue
-                    #     elif len(cached) == gl.get(n):
-                    #         last_sup = sorted(cache[shift].items(), key=lambda x: x[1], reverse=True)[-1]
-                    #         if name == last_sup[0]:
-                    #             cache[shift][name] += 1
-                    #             return re_user(supporter)
-                    #         else:
-                    #             continue
-
         user_data = (None, None)  # Default assign to None
         p_time = project.get('time')  # unix time int
         shift = project.get('shift')  # string (day/night)
+        source.add_log('[INFO] Project {} shift {}'.format(project.get('name'), shift))
         gl = grade_list[0] if shift == 'day' else grade_list[1]
         grade = sorted(gl.keys(), reverse=False)[-1]  # Get highest grade from list
         if gl.get(grade) == 1:
             user_data = set_all(grade)
         elif gl.get(grade) > 1:
-            user_data = set_all(grade, more_then_one=True)
-        return user_data
+            user_data = set_all(grade, one_supporter_on_shift=False)
+        if user_data['id']:
+            source.add_log('[INFO] For project {} choose supporter {}'.format(project.get('name'), user_data.get('name')))
+            return user_data
 
     # 1. Если проект уже назначен, пропускаем его
     # 2. Подчищаем проекты от too_old
@@ -290,8 +279,7 @@ def update_table_quere(problems):
             }
             update_list.append(update)
         else:
-            # raise TypeError:
-            print('[ERROR] Cannot get sup data for project  [ {} ] and shift and time : '.format(
+            source.add_log('[ERROR] Cannot get supporter data for project  [ {} ] and shift and time : '.format(
                 prj_name))  # , project.get('shift'), prj_time))# todo Add info to error!!!
             continue
             # exit(1)

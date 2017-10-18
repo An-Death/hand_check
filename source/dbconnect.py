@@ -9,7 +9,7 @@ from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 import source
-from dbsource import Cb_data42 as pr_data
+from dbsource import Cb_data42 as pr_data, Cb_users as user_table
 from dbsource import engine
 from dbsource import (Mantis_project_check_table as mct,
                       Mantis_user_table as mut,
@@ -118,17 +118,20 @@ def get_user_info(summary):
         # result = request.first()
         # email = result[0]
         # login = email.split('@', 1)[0] if email != 'maxim@tetraservice.ru' else 'm.pavlov'
-        sup_info = MAN.query(mut.id).filter_by(mut.realname.like(l_name)).one()[0]
+        sup_info1 = MAN.query(mut.id, mut.username, mut.email).filter(and_(mut.realname.like(l_name), mut.enabled > 0))
+        id, username, email = sup_info1.first()
         # fio = result[1] # Можно получать фиo
-        return {'email': sup_info.email,
-                'login': sup_info.username,
-                'id': sup_info.id
-                # 'fio':fio
-                }
     except Exception:
-        raise NameError(
+        source.add_log(
             ' [ERROR] Module : " {} " : User with this summary: "{}" does not exist! '.format('get_user_info()',
-                                                                                             summary))
+                                                                                              summary)
+        )
+        return None
+    return {'email': email,
+            'login': username,
+            'id': id
+            # 'fio':fio
+            }
 
 
 def update_table(list_for_update):

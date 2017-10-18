@@ -28,7 +28,7 @@ def engine(basename):
     host = '192.168.0.100' if basename is not "test" else '127.1'
     bname = basename if basename is not "test" else 'mantis_hand_check'
     port = get_port(basename)
-    engine_str = 'mysql://{u}:{p}@{h}{port}/{b_name}?charset=utf8&use_unicode=0'.format(
+    engine_str = 'mysql://{u}:{p}@{h}{port}/{b_name}?charset=utf8&use_unicode=1'.format(
         u=user,
         p=password,
         h=host,

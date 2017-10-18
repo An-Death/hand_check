@@ -198,8 +198,8 @@ def get_supporters():
                     login = user_info.get('login')
                     sup_id = user_info.get('id')
                 else:
-                    email, login, sup_id = (None, ) * 3  # if did't find any data in DB
-
+                    source.add_log(' [ERROR] {} not found! Skipping!'.format(name))
+                    continue
                 supporter_data = {
                     'id': sup_id,
                     'name': name,

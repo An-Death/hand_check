@@ -65,6 +65,7 @@ def close_fd(file_descriptor):
 
 
 def add_log(data, file=LOG_FILE):
+    print(data)
     with codecs.open(file, 'a', encoding='utf-8') as file_descriptor:
         log_data = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' ' + data
         file_descriptor.write(log_data)
