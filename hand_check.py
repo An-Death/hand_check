@@ -110,14 +110,16 @@ def write_old(projects):
     :param projects:
     :return:
     """
-    old = ''
-    if projects:  # Если не None
-        for p in projects:
-            old = '[OLD] Project : {p_n} : {p_t} supporter: {s_n} \n'.format(
+    if projects:
+        olds = []
+        for i, p in enumerate(projects, start=1):
+            old ='[OLD] {} Project : {p_n} : {p_t} supporter: {s_n}'.format(i,
                 p_n=p.get('name'),
                 p_t=datetime.fromtimestamp(p.get('time')),
                 s_n=p.get('sup')
             )
+            olds.append(old)
+        old = '\n'.join(olds)
     else:  # Если None
         old = '[OLD] All projects was checked!'
 
@@ -139,7 +141,7 @@ def write_updates(up_list):
         Write to log_file
     """
     for up in up_list:
-        text = '[UPDATE] Project : {p_n} : set time : {p_t} set supporter: {s_n} \n'.format(
+        text = '[UPDATE] Project : {p_n} : set time : {p_t} set supporter: {s_n}'.format(
             p_n=up.get('prj_name'),
             p_t=datetime.fromtimestamp(up.get('prj_time')),
             s_n=up.get('sup_name')
@@ -174,16 +176,19 @@ def update_table_quere(problems):
     """
 
     update_list = []
-    cache = {'day': defaultdict(int), 'night': defaultdict(int)}
-    cache_con = {'day': defaultdict(int), 'night': defaultdict(int)}
+    # for ordinary projects
+    cache_1 = {'day': defaultdict(int), 'night': defaultdict(int)}
+    # for projects with addition tasks
+    cache_2 = {'day': defaultdict(int), 'night': defaultdict(int)}
     supporters = problems['shift']
     projects = problems['projects']
     problem = problems['delays']
-    grade_list = (grade_count(supporters['day']), grade_count(supporters['night']))
+    grade_list = {'day': grade_count(supporters['day']), 'night': grade_count(supporters['night'])}
 
     def sup_iterator(supporters, project, grade_list):
         """
         Проворачивает внутри себя магию и на выходе возвращает Саппортера на которого надо назначить проверку.
+        :param grade_list:
         :type supporters: object
         :param supporters: project, grade_list
         :param project:
@@ -197,8 +202,7 @@ def update_table_quere(problems):
                 user_id = sp.get('id')
                 return {'id': user_id, 'name': user_name}
 
-            for supporter_name in supporters[shift]:  # keys of dict
-                supporter = supporters[shift].get(supporter_name)
+            for name, supporter in supporters[shift].items():  # keys of dict
                 # Проверяем грэйд
                 if supporter.get('grade') != n:
                     continue
@@ -209,50 +213,49 @@ def update_table_quere(problems):
                     # Если на смене только один сап - всё на него
                     return re_user(supporter)
                 else:
-                    # Если на смене больше одного саппортера, запускаем ебацикл
-                    name = supporter.get('login')
-                    cache_list = cache_con if project.get('con') else cache
-                    cached_sup = cache_list[shift].keys()
-                    if name not in cached_sup:
+                    # Если на смене больше одного саппортера, использует отдельный кэш
+                    cache = cache_2[shift] if project.get('con') else cache_1[shift]
+                    cached_name = cache.keys()
+                    if name not in cached_name:
                         # Если на сапа нету в кэше, мы добавляем запись в дикт с именем сапа
-                        # И присвыиваем значение назначенный проектов =1
+                        # И присвыиваем значение назначенных проектов =1
                         # todo Добавить логирования.
-                        cache_con[shift][name] += 1
+                        cache[name] += 1
                         return re_user(supporter)
-                    elif len(cached_sup) != gl.get(n):
+                    elif len(cached_name) != gl.get(n):
                         # переходим к следующему саппортеру
                         continue
-                    elif len(cached_sup) == gl.get(n):
+                    elif len(cached_name) == gl.get(n):
                         # если кл-во сапортеров равно количеству сапов в грейде,
                         # то сравниваем сапортеров по кол-ву назначенных на них проектов
-                        last_sup = sorted(cache_con[shift].items(), key=lambda x: x[1], reverse=True)[-1]
-                        cache_con[shift][last_sup[0]] += 1
+                        last_sup = sorted(cache.items(), key=lambda x: x[1], reverse=True)[-1]
+                        cache[last_sup[0]] += 1
                         return re_user(supporter)
+
         user_data = (None, None)  # Default assign to None
         p_time = project.get('time')  # unix time int
         shift = project.get('shift')  # string (day/night)
         source.add_log('[INFO] Project {} shift {}'.format(project.get('name'), shift))
-        gl = grade_list[0] if shift == 'day' else grade_list[1]
+        gl = grade_list[shift]
         grade = sorted(gl.keys(), reverse=False)[-1]  # Get highest grade from list
         if gl.get(grade) == 1:
             user_data = set_all(grade)
         elif gl.get(grade) > 1:
             user_data = set_all(grade, one_supporter_on_shift=False)
-        if user_data['id']:
-            source.add_log('[INFO] For project {} choose supporter {}'.format(project.get('name'), user_data.get('name')))
-            return user_data
+        source.add_log('[INFO] For project {} was chosen supporter {} at shift [{}]'.format(project.get('name'),
+                                                                                            user_data.get('name'),
+                                                                                            shift))
+        return user_data if user_data else None
 
     # 1. Если проект уже назначен, пропускаем его
     # 2. Подчищаем проекты от too_old
     # 3. Обновляем время в просреченных проктах, те что менее 3 дней
     for project in projects:
-        # if project.get('time') > UNIX_NOW: # todo Must be on the next day
-        #     continue
         if project['supporter'].get('id') != 0 and project.get('time') > UNIX_NOW:
             continue
         elif project in problem.get('too_old'):
             projects.remove(project)
-            old_log_str = '{time} : [ERROR] : The project " {p_n} " is too old and was removed from task'.format(
+            old_log_str = '{time} : [ERROR] : The project " {p_n} " is too old and was removed from tasks'.format(
                 time=datetime.today().date(),
                 p_n=project.get('name')
             )
