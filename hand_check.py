@@ -113,11 +113,11 @@ def write_old(projects):
     if projects:
         olds = []
         for i, p in enumerate(projects, start=1):
-            old ='[OLD] {} Project : {p_n} : {p_t} supporter: {s_n}'.format(i,
-                p_n=p.get('name'),
-                p_t=datetime.fromtimestamp(p.get('time')),
-                s_n=p.get('sup')
-            )
+            old = '[OLD] {} Project : {p_n} : {p_t} supporter: {s_n}'.format(i,
+                                                                             p_n=p.get('name'),
+                                                                             p_t=datetime.fromtimestamp(p.get('time')),
+                                                                             s_n=p.get('sup')
+                                                                             )
             olds.append(old)
         old = '\n'.join(olds)
     else:  # Если None
@@ -213,24 +213,25 @@ def update_table_quere(problems):
                     # Если на смене только один сап - всё на него
                     return re_user(supporter)
                 else:
-                    # Если на смене больше одного саппортера, использует отдельный кэш
+                    # Если на смене больше одного саппортера
+                    # Если проект с доп заданием - использует отдельный кэш
                     cache = cache_2[shift] if project.get('con') else cache_1[shift]
-                    cached_name = cache.keys()
-                    if name not in cached_name:
+                    len_cache = len(cache.keys())
+                    if name not in cache:
                         # Если на сапа нету в кэше, мы добавляем запись в дикт с именем сапа
                         # И присвыиваем значение назначенных проектов =1
                         # todo Добавить логирования.
                         cache[name] += 1
                         return re_user(supporter)
-                    elif len(cached_name) != gl.get(n):
+                    elif len_cache != gl.get(n):
                         # переходим к следующему саппортеру
                         continue
-                    elif len(cached_name) == gl.get(n):
+                    elif len_cache == gl.get(n):
                         # если кл-во сапортеров равно количеству сапов в грейде,
                         # то сравниваем сапортеров по кол-ву назначенных на них проектов
                         last_sup = sorted(cache.items(), key=lambda x: x[1], reverse=True)[-1]
                         cache[last_sup[0]] += 1
-                        return re_user(supporter)
+                        return re_user(supporters[shift].get(last_sup[0]))
 
         user_data = (None, None)  # Default assign to None
         p_time = project.get('time')  # unix time int
@@ -351,6 +352,7 @@ def main():
         # ======================================================
 
         projects_after_update = get_projects()
+        # todo def send_unassigned_projects_to_mail()
         letters = prepare_data_to_send(supporters, projects_after_update, list_for_update)
         send_email(letters)
 
